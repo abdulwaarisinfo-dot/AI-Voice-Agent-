@@ -41,6 +41,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # fill OPENAI_API_KEY, SESSION_SECRET, OWNER_PASSWORD
 python -m app.seed          # optional SAMPLE restaurant + dishes (placeholders, edit on /menu)
+python -m app.set_owner_password --sample   # menu says "Invalid restaurant or password"? run this: shows what is in the DB and resets the owner password
 uvicorn app.main:app_factory --factory --reload
 ```
 Open http://localhost:8000/call (microphone needs HTTPS or localhost). MongoDB must be running at `MONGODB_URI`.

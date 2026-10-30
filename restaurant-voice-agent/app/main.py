@@ -9,6 +9,7 @@ from pymongo.errors import PyMongoError
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import Settings, get_settings
+from .bootstrap import sync_default_restaurant
 from .database import connect, init_indexes
 from .money import format_money
 from .routers import menu, orders, pages, restaurants, voice
@@ -34,6 +35,7 @@ def create_app(settings: Settings | None = None, db=None, live_client=None, side
                 f"\nCannot reach MongoDB at {settings.mongodb_uri!r} ({exc.__class__.__name__}).\n"
                 "Start MongoDB first (e.g. `docker run -d -p 27017:27017 --name mongo mongo:7`) or set MONGODB_URI "
                 "in .env to a MongoDB Atlas connection string. Then run `python -m app.seed` once.\n") from None
+    sync_default_restaurant(db, settings)
     app = FastAPI(title="Restaurant Voice Agent", docs_url=None if settings.is_production else "/docs", redoc_url=None)
     app.state.settings, app.state.db, app.state.secret = settings, db, secret
     client = live_client or AsyncOpenAI(api_key=settings.openai_api_key or "not-configured", max_retries=0, timeout=30)

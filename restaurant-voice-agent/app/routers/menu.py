@@ -24,6 +24,14 @@ def login(request: Request, body: LoginIn):
     restaurant = menu_service.get_restaurant(request.app.state.db, body.restaurant_id)
     stored = restaurant.get("owner_password_hash") if restaurant else _DUMMY_HASH
     if not (verify_password(body.password, stored) and restaurant):
+        if request.app.state.settings.app_env.lower() == "development":
+            # Development only: say WHY. Production keeps the single generic message (no account enumeration).
+            if restaurant is None:
+                raise HTTPException(401, f"Restaurant '{body.restaurant_id}' was not found in this database.")
+            if not restaurant.get("owner_password_hash"):
+                raise HTTPException(401, "This restaurant has no owner password yet. Set OWNER_PASSWORD in .env and restart the server.")
+            raise HTTPException(401, "Wrong password. In development the owner password is OWNER_PASSWORD from .env "
+                                     "(restart the server after changing it).")
         raise HTTPException(401, "Invalid restaurant or password")
     request.session.clear()
     request.session["owner_restaurant_id"] = restaurant["_id"]

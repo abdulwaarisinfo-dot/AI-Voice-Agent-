@@ -39,11 +39,12 @@ Order lifecycle: `pending → awaiting_confirmation → confirmed`
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # fill OPENAI_API_KEY, SESSION_SECRET, OWNER_PASSWORD
+cp .env.example .env        # fill OPENAI_API_KEY, SESSION_SECRET, OWNER_PASSWORD (= your /menu login password)
 python -m app.seed          # optional SAMPLE restaurant + dishes (placeholders, edit on /menu)
 python -m app.set_owner_password --sample   # menu says "Invalid restaurant or password"? run this: shows what is in the DB and resets the owner password
 uvicorn app.main:app_factory --factory --reload
 ```
+In development (`APP_ENV=development`) the server applies `OWNER_PASSWORD` at startup: it creates the restaurant if missing and makes that password the `/menu` owner login (restart after changing it). Start the server from the `restaurant-voice-agent` folder so `.env` is found. Production never does this automatically.
 Open http://localhost:8000/call (microphone needs HTTPS or localhost). MongoDB must be running at `MONGODB_URI`.
 
 | Variable | Purpose |

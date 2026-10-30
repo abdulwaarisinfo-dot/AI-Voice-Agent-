@@ -41,8 +41,17 @@ a{color:var(--brand)}
 .card h3{margin:0;font-size:1.05rem}.card p{margin:.2em 0}
 .price{font-weight:700;white-space:nowrap}
 .badge{font-size:.8rem;padding:.1em .6em;border-radius:99px;background:#dff3e8;color:var(--ok)}.badge.off{background:#eee;color:#555}
-.owner{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--line)}
-.stack{display:grid;gap:10px;max-width:420px}
+.owner{margin:1rem 0 1.5rem}
+.owner h2{margin-top:0}
+.stack{display:grid;gap:10px;max-width:520px}
+.stack input:not([type=checkbox]){width:100%}
+.page-head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-start}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:.6rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:10px 0}
+.owner-badge{display:inline-block;margin:0 0 6px;padding:.25em .8em}
+.card-main{flex:1 1 220px;min-width:0}
+.card-side{display:grid;gap:8px;justify-items:end}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 label{display:grid;gap:4px;font-weight:600}label.check{display:flex;gap:8px;align-items:center}
 input{font:inherit;padding:.5em .6em;border:1px solid #9aa8a1;border-radius:8px;background:#fff}
 .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -51,5 +60,5 @@ input{font:inherit;padding:.5em .6em;border:1px solid #9aa8a1;border-radius:8px;
 .table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;background:var(--surface)}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}.num{text-align:right;white-space:nowrap}
 tr.grand th,tr.grand td{font-size:1.1rem;font-weight:700}
-@media (max-width:520px){.btn.big{width:100%}nav a{margin-left:10px}}
+@media (max-width:520px){.btn.big{width:100%}nav a{margin-left:10px}.card-side{justify-items:start;width:100%}.actions{justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

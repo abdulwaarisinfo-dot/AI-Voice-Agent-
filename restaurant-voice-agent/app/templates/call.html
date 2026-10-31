@@ -4,26 +4,31 @@
 <section id="call-root" class="call"
          data-restaurant-id="{{ restaurant._id }}"
          data-menu-url="/menu?restaurant_id={{ restaurant._id|urlencode }}">
-  <h1>Order by voice</h1>
-  <p class="lede">Talk to {{ restaurant.name }}'s ordering assistant in your own language: English, Urdu or any other. It answers in the language you speak. This is a voice call in your browser, not a telephone call. Nothing is ordered until you clearly confirm the read-back.</p>
+  <div class="hero">
+    <span class="rings" aria-hidden="true"></span>
+    <div class="hero-copy">
+      <h1>Order by voice</h1>
+      <p class="lede">Talk to {{ restaurant.name }}'s ordering assistant in your own language: English, Urdu or any other. It answers in the language you speak. This is a voice call in your browser, not a telephone call. Nothing is ordered until you clearly confirm the read-back.</p>
 
-  <p id="support-warning" class="alert" role="alert" hidden>
-    This browser can't start a voice call (it needs microphone access over HTTPS or localhost and WebRTC support).
-    You can still <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}">view the menu</a>.
-  </p>
+      <p id="support-warning" class="alert" role="alert" hidden>
+        This browser can't start a voice call (it needs microphone access over HTTPS or localhost and WebRTC support).
+        You can still <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}">view the menu</a>.
+      </p>
 
-  <div class="status-row">
-    <span id="status" class="status status-idle" role="status" aria-live="polite">Idle</span>
-    <span id="status-detail" class="muted"></span>
+      <div class="status-row">
+        <span id="status" class="status status-idle" role="status" aria-live="polite">Idle</span>
+        <span id="status-detail" class="muted"></span>
+      </div>
+
+      <div class="controls">
+        <button id="btn-call" type="button" class="btn primary big">Call restaurant</button>
+        <button id="btn-end" type="button" class="btn danger big" hidden disabled>End call</button>
+        <button id="btn-cancel" type="button" class="btn">Cancel</button>
+      </div>
+
+      <div id="error" class="alert" role="alert" hidden></div>
+    </div>
   </div>
-
-  <div class="controls">
-    <button id="btn-call" type="button" class="btn primary big">Call restaurant</button>
-    <button id="btn-end" type="button" class="btn danger big" hidden disabled>End call</button>
-    <button id="btn-cancel" type="button" class="btn">Cancel</button>
-  </div>
-
-  <div id="error" class="alert" role="alert" hidden></div>
 
   <div id="order-banner" class="banner" hidden>
     <p id="order-text"></p>

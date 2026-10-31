@@ -68,7 +68,7 @@ def edit_item(request: Request, item_id: str, body: MenuItemIn, rid: str = Depen
     if item is None:
         raise HTTPException(404, "Item not found")
     return item
-
+ 
 
 @router.patch("/menu/items/{item_id}/availability", dependencies=[Depends(require_same_origin)])
 def availability(request: Request, item_id: str, body: AvailabilityIn, rid: str = Depends(require_owner)):

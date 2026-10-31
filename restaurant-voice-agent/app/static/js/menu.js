@@ -55,8 +55,7 @@
   async function load() {
     try {
       const d = await api('/api/menu?restaurant_id=' + encodeURIComponent(rid));
-      currency = d.restaurant.currency; items = d.items; $('f-currency').textContent = currency;
-      document.querySelectorAll('.cur').forEach((n) => { n.textContent = currency; }); render();
+      currency = d.restaurant.currency; items = d.items; $('f-currency').textContent = currency; render();
     } catch (e) { notice('Could not load the menu: ' + e.message); }
   }
 
@@ -67,7 +66,7 @@
     $('owner-panel').hidden = !owner;
     $('owner-section').hidden = !(owner || loginOpen);
   }
-  function setOwner(on) { owner = on; if (on) loginOpen = false; else { closeForm(); closeImport(); } syncOwnerUi(); }
+  function setOwner(on) { owner = on; if (on) loginOpen = false; else closeForm(); syncOwnerUi(); }
   function showLogin(msg) {
     loginOpen = true; $('login-error').hidden = true;
     $('login-msg').textContent = msg || 'Sign in to add, edit or delete dishes.';
@@ -85,7 +84,7 @@
   /* ---------- item form ---------- */
   function closeForm() { $('item-form').reset(); $('f-id').value = ''; $('item-error').hidden = true; $('item-form').hidden = true; }
   function openForm(item) {
-    closeImport(); $('item-form').reset(); $('item-error').hidden = true;
+    $('item-form').reset(); $('item-error').hidden = true;
     if (item) {
       $('item-form-title').textContent = 'Edit item: ' + item.name; $('f-id').value = item.id; $('f-name').value = item.name;
       $('f-desc').value = item.description; $('f-cat').value = item.category; $('f-price').value = (item.price_minor / 100).toFixed(2);
@@ -115,54 +114,7 @@
     } finally { busy = false; }
   }
 
-
-  /* ---------- JSON import ---------- */
-  function closeImport() { $('import-form').reset(); $('import-error').hidden = true; $('import-form').hidden = true; }
-  function openImport() {
-    closeForm(); $('import-form').reset(); $('import-error').hidden = true; $('import-form').hidden = false;
-    $('import-form').scrollIntoView({ block: 'center' }); $('import-text').focus();
-  }
-  function importError(msg) { $('import-error').textContent = msg; $('import-error').hidden = false; }
-  function itemsFromJson(text) {
-    let data;
-    try { data = JSON.parse(text); } catch (e) { throw new Error('This is not valid JSON (' + e.message + ').'); }
-    const list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
-    if (!list || !list.length) throw new Error('Expected {"items": [ ... ]} or a list with at least one dish.');
-    if (list.length > 200) throw new Error('Too many dishes in one import (' + list.length + '). The limit is 200.');
-    return list;
-  }
-
   /* ---------- events ---------- */
-  $('btn-import').addEventListener('click', () => asOwner(openImport));
-  $('import-cancel').addEventListener('click', closeImport);
-  $('import-sample').addEventListener('click', async () => {
-    try { $('import-text').value = JSON.stringify(await api('/static/data/menu_20_items.json'), null, 2); $('import-error').hidden = true; }
-    catch (e) { importError('Could not load the sample: ' + e.message); }
-  });
-  $('import-file').addEventListener('change', (ev) => {
-    const f = ev.target.files && ev.target.files[0]; if (!f) return;
-    if (f.size > 500000) { importError('That file is too large (limit 500 KB).'); return; }
-    const r = new FileReader();
-    r.onload = () => { $('import-text').value = String(r.result).replace(/^\uFEFF/, ''); $('import-error').hidden = true; };
-    r.onerror = () => importError('Could not read that file.');
-    r.readAsText(f);
-  });
-  $('import-form').addEventListener('submit', async (ev) => {
-    ev.preventDefault(); $('import-error').hidden = true;
-    if (busy) return;
-    let list;
-    try { list = itemsFromJson($('import-text').value); } catch (e) { importError(e.message); return; }
-    const btn = $('import-form').querySelector('button[type=submit]');
-    busy = true; btn.disabled = true;
-    try {
-      const r = await api('/api/menu/import', { method: 'POST', body: JSON.stringify({ items: list }) });
-      closeImport(); await load();
-      notice('Imported ' + r.added + (r.added === 1 ? ' dish' : ' dishes') + (r.skipped.length ? '; skipped ' + r.skipped.length + ' already on the menu' : '') + '.');
-    } catch (e) {
-      if (e.status === 401) { setOwner(false); showLogin('Your session expired. Sign in again, then press Import.'); }
-      else importError(e.message);                                   // the pasted JSON stays so it can be fixed
-    } finally { busy = false; btn.disabled = false; }
-  });
   $('btn-add').addEventListener('click', () => asOwner(() => openForm(null)));
   $('btn-signin').addEventListener('click', () => { pending = null; showLogin(); });
   $('login-cancel').addEventListener('click', () => { pending = null; loginOpen = false; syncOwnerUi(); });

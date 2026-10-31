@@ -2,13 +2,31 @@
 {% block title %}Menu - {{ restaurant.name }}{% endblock %}
 {% block content %}
 <section id="menu-root" data-restaurant-id="{{ restaurant._id }}">
-  <div class="page-head">
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>{{ restaurant.name }}</h1>
+      <p>Browse the menu, or just tell our assistant what you'd like. It speaks your language.</p>
+      <a class="btn primary big" href="/call?restaurant_id={{ restaurant._id|urlencode }}">Order by voice</a>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <p class="bubble you">Salaam! Can I order something to eat?</p>
+      <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="bubble bot">Of course. Tell me what you'd like, in any language.</p>
+    </div>
+  </div>
+
+  <div class="search">
+    <input id="menu-search" type="search" placeholder="Search dishes" aria-label="Search dishes" autocomplete="off">
+  </div>
+  <div id="cat-chips" class="cats" role="group" aria-label="Categories" hidden></div>
+
+  <div class="section-head">
     <div>
-      <h1>Menu</h1>
+      <h2>Menu</h2>
       <p id="menu-status" class="muted" role="status">Loading menu...</p>
     </div>
     <div class="toolbar" aria-label="Menu actions">
-      <button id="btn-add" class="btn primary" type="button">+ Add new item</button>
+      <button id="btn-add" class="btn dark" type="button">+ Add new item</button>
       <button id="btn-signin" class="btn" type="button">Owner login</button>
       <button id="logout" class="btn" type="button" hidden>Sign out</button>
     </div>
@@ -27,27 +45,26 @@
     </form>
     <div id="owner-panel" hidden>
       <p class="badge owner-badge">Owner mode: you can add, edit and delete dishes</p>
-      <form id="item-form" class="stack panel" hidden>
-        <h3 id="item-form-title">Add new item</h3>
+      <form id="item-form" class="stack panel form-grid" hidden>
+        <h3 id="item-form-title" class="wide">Add new item</h3>
         <input type="hidden" id="f-id">
         <label>Name <input id="f-name" maxlength="80" required></label>
-        <label>Description <input id="f-desc" maxlength="300"></label>
         <label>Category <input id="f-cat" maxlength="40" list="cat-list" required></label>
         <datalist id="cat-list"></datalist>
-        <label>Price (<span id="f-currency"></span>) <input id="f-price" type="number" min="0" step="0.01" required></label>
-        <label>Customization options (comma separated, optional) <input id="f-opts"></label>
-        <label class="check"><input id="f-avail" type="checkbox" checked> Available</label>
-        <div class="row">
+        <label><span>Price (<span id="f-currency"></span>)</span> <input id="f-price" type="number" min="0" step="0.01" required></label>
+        <label>Options (comma separated, optional) <input id="f-opts"></label>
+        <label class="wide">Description <input id="f-desc" maxlength="300"></label>
+        <label class="check wide"><input id="f-avail" type="checkbox" checked> Available</label>
+        <div class="row wide">
           <button class="btn primary" type="submit">Save item</button>
           <button class="btn" type="button" id="f-reset">Cancel</button>
         </div>
-        <p id="item-error" class="alert" role="alert" hidden></p>
+        <p id="item-error" class="alert wide" role="alert" hidden></p>
       </form>
     </div>
   </section>
 
   <div id="menu-list"></div>
-  <p><a class="btn primary" href="/call?restaurant_id={{ restaurant._id|urlencode }}">Order by voice</a></p>
 </section>
 <script src="/static/js/menu.js"></script>
 {% endblock %}

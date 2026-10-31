@@ -62,4 +62,3 @@ th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}.num{
 tr.grand th,tr.grand td{font-size:1.1rem;font-weight:700}
 @media (max-width:520px){.btn.big{width:100%}nav a{margin-left:10px}.card-side{justify-items:start;width:100%}.actions{justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-textarea.code{width:100%;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;resize:vertical}

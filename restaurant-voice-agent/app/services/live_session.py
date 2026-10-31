@@ -36,7 +36,7 @@ TOOLS = [
      "parameters": {"type": "object", "properties": {"category": {"type": "string", "description": "Optional category filter"}}, "additionalProperties": False}},
     {"type": "function", "name": "find_menu_item",
      "description": "Check whether ONE dish is on the menu and get its verified price. Call this every time the customer asks if a dish exists, asks its price/details, or wants to order a dish by name. Answer ONLY from the result.",
-     "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "Dish name as the customer said it"}},
+     "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "Dish name as the customer said it. Urdu/Arabic script or English letters both work; if the result asks you to retry, repeat the call once with the name in English letters"}},
                     "required": ["query"], "additionalProperties": False}},
     {"type": "function", "name": "set_order_items",
      "description": "Replace the order's items. Server prices everything from the database.",
@@ -81,6 +81,10 @@ def _search_instruction(r: dict) -> str:
                 "Do not invent anything.")
     if r.get("query_unclear"):
         return "The dish name was unclear. Ask the customer to repeat which dish they mean."
+    if r["match"] == "none" and r.get("non_latin"):
+        return ("This spelling could not be matched. Do NOT tell the customer the dish is missing yet. Call find_menu_item once more with "
+                "the dish name written in English letters (for example 'malai boti'). Only if that also finds nothing may you say it is "
+                "not on the menu.")
     if r["match"] == "none":
         cats = ", ".join(r["categories"])
         return (f"'{q}' is NOT on our menu. Say so plainly and politely (e.g. 'Sorry, {q} is not on our menu', said in the "

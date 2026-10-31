@@ -1,8 +1,11 @@
 """Menu queries. Every query is scoped by restaurant_id."""
 import re
 import uuid
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
+
+from pydantic import ValidationError
 
 from ..money import format_money, spoken_money
 from ..models.schemas import MenuItemIn
@@ -130,3 +133,62 @@ def search_menu(db, restaurant: dict, query: str, limit: int = 5) -> dict:
     keep = ("id", "name", "description", "category", "price", "price_spoken", "available", "options")
     return {**base, "match": match, "menu_empty": False,
             "matches": [{k: i[k] for k in keep} for i in found[:limit]]}
+
+
+# ---------- bulk import (JSON) ----------
+def _price_minor(raw: dict) -> int:
+    """Accept price_minor (integer paisa) or price (rupees, e.g. 450, 450.5, "1,299"). Decimal avoids float rounding."""
+    if raw.get("price_minor") is not None:
+        v = raw["price_minor"]
+        if isinstance(v, bool) or not isinstance(v, int):
+            raise ValueError("price_minor must be a whole number")
+        return v
+    if "price" not in raw:
+        raise ValueError("price is required (for example \"price\": 450)")
+    v = raw["price"]
+    try:
+        if isinstance(v, bool):
+            raise InvalidOperation
+        d = Decimal(str(v).replace(",", "").strip())
+        if not d.is_finite() or d < 0:
+            raise InvalidOperation
+    except InvalidOperation:
+        raise ValueError("price must be a number like 450 or 450.50") from None
+    return int((d * 100).to_integral_value(rounding=ROUND_HALF_UP))
+
+
+def import_items(db, restaurant: dict, raw_items: list) -> dict:
+    """All-or-nothing validation: if any row is invalid NOTHING is written and every problem is reported.
+    Rows whose name+category already exist (or repeat inside the file) are skipped, so re-importing never duplicates."""
+    parsed, errors = [], []
+    for n, raw in enumerate(raw_items, 1):
+        label = raw.get("name") if isinstance(raw, dict) and isinstance(raw.get("name"), str) else ""
+        try:
+            if not isinstance(raw, dict):
+                raise ValueError("each item must be an object like {\"name\": ..., \"category\": ..., \"price\": ...}")
+            data = {k: raw[k] for k in ("name", "description", "category", "available", "options") if k in raw}
+            data["price_minor"] = _price_minor(raw)
+            parsed.append((n, MenuItemIn(**data)))
+        except ValidationError as exc:
+            msg = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
+            errors.append({"row": n, "name": label, "error": msg})
+        except ValueError as exc:
+            errors.append({"row": n, "name": label, "error": str(exc)})
+    if errors:
+        return {"added": 0, "skipped": [], "errors": errors, "items": []}
+
+    rid = restaurant["_id"]
+    seen = {(d["name"].strip().lower(), d["category"].strip().lower())
+            for d in db.menu_items.find({"restaurant_id": rid}, {"name": 1, "category": 1})}
+    now, docs, skipped = datetime.now(timezone.utc), [], []
+    for n, item in parsed:
+        key = (item.name.lower(), item.category.lower())
+        if key in seen:
+            skipped.append({"row": n, "name": item.name, "reason": "already on the menu"})
+            continue
+        seen.add(key)
+        docs.append({"_id": uuid.uuid4().hex, "restaurant_id": rid, **item.model_dump(), "created_at": now, "updated_at": now})
+    if docs:
+        db.menu_items.insert_many(docs)
+    return {"added": len(docs), "skipped": skipped, "errors": [],
+            "items": [public_item(d, restaurant["currency"]) for d in docs]}

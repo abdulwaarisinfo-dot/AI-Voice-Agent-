@@ -2,19 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1E1814">
+  <meta name="color-scheme" content="light">
   <title>{% block title %}{{ restaurant.name }}{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preload" href="/static/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="site">
-    <a class="brand" href="/call?restaurant_id={{ restaurant._id|urlencode }}">{{ restaurant.name }}</a>
-    <nav aria-label="Main">
-      <a href="/call?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'call' %}aria-current="page"{% endif %}>Order by voice</a>
-      <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'menu' %}aria-current="page"{% endif %}>Menu</a>
-    </nav>
+    <div class="bar">
+      <a class="brand" href="/menu?restaurant_id={{ restaurant._id|urlencode }}">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
+        <span class="brand-name">{{ restaurant.name }}</span>
+      </a>
+      <nav class="top" aria-label="Main">
+        <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'menu' %}aria-current="page"{% endif %}>Menu</a>
+        <a href="/call?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'call' %}aria-current="page"{% endif %}>Order by voice</a>
+      </nav>
+    </div>
   </header>
   <main id="main">{% block content %}{% endblock %}</main>
+  <nav class="tabbar" aria-label="Main">
+    <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'menu' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+      <span>Menu</span>
+    </a>
+    <a href="/call?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'call' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+      <span>Order by voice</span>
+    </a>
+  </nav>
 </body>
 </html>

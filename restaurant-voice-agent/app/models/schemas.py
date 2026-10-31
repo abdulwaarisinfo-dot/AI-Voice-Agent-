@@ -131,7 +131,7 @@ class CallSessionIn(BaseModel):
     sdp: str = Field(min_length=10, max_length=65536)
     client_call_id: str = Field(pattern=r"^[0-9a-f]{32}$")
     restaurant_id: str | None = Field(default=None, max_length=64)
-
+ 
     @field_validator("sdp")
     @classmethod
     def _sdp(cls, v: str) -> str:

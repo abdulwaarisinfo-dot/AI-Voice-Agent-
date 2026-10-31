@@ -93,3 +93,8 @@ Collection `menu_items` in database `restaurant_voice`. Ready-made 20 dishes are
 - **mongosh:** `mongosh "YOUR_MONGODB_URI" mongodb/insert_menu_items.js` (safe to run again).
 
 `restaurant_id` must equal your restaurant's `_id` (default `demo-restaurant`) and `price_minor` is in paisa (55000 = PKR 550.00).
+
+## Design
+Pages use one stylesheet (`app/static/css/style.css`) and a self-hosted font (Plus Jakarta Sans, SIL OFL, in `app/static/fonts/`), so the
+Content-Security-Policy stays strict: no inline styles or scripts, no external fonts or images. Dish tiles use emoji chosen from the dish name
+(see `GLYPHS` in `app/static/js/menu.js`), so no photos are needed.

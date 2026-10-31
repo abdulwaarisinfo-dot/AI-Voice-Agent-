@@ -83,8 +83,8 @@ def _search_instruction(r: dict) -> str:
         return "The dish name was unclear. Ask the customer to repeat which dish they mean."
     if r["match"] == "none":
         cats = ", ".join(r["categories"])
-        return (f"'{q}' is NOT on our menu. Say so plainly and politely (e.g. 'Sorry, {q} is not on our menu' / "
-                f"'Maaf kijiye, {q} hamare menu mein nahi hai'). Do NOT guess a price, do NOT offer it, do NOT invent substitutes. "
+        return (f"'{q}' is NOT on our menu. Say so plainly and politely (e.g. 'Sorry, {q} is not on our menu', said in the "
+                f"customer's own language). Do NOT guess a price, do NOT offer it, do NOT invent substitutes. "
                 f"You may offer to read what we do have. Menu categories: {cats}.")
     if r["match"] == "similar":
         return (f"No dish called '{q}', but these similar dishes ARE on the menu. Ask the customer if they meant one of them. "
@@ -436,7 +436,7 @@ class LiveService:
             return
         call.outbox.put_nowait({
             "type": "session.commentary.append", "event_id": "greeting_1", "delegation_id": None,
-            "content": f"Greet the customer warmly as the voice ordering assistant for {call.restaurant['name']} and ask how you can help."})
+            "content": f"Greet the customer warmly in English as the voice ordering assistant for {call.restaurant['name']}, tell them they can speak in any language they like, and ask how you can help. From the customer's first reply onward, speak in the language they use."})
 
     # ----- sideband -----
     async def _run_sideband(self, call: CallState) -> None:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
-from ..models.schemas import AvailabilityIn, LoginIn, MenuImportIn, MenuItemIn
+from ..models.schemas import AvailabilityIn, LoginIn, MenuItemIn
 from ..security import RateLimiter, client_ip, require_owner, require_same_origin, verify_password
 from ..services import menu_service
 from .deps import resolve_restaurant
@@ -60,16 +60,6 @@ def _owner_restaurant(request: Request, rid: str) -> dict:
 @router.post("/menu/items", status_code=201, dependencies=[Depends(require_same_origin)])
 def add_item(request: Request, body: MenuItemIn, rid: str = Depends(require_owner)):
     return menu_service.create_item(request.app.state.db, _owner_restaurant(request, rid), body)
-
-
-@router.post("/menu/import", dependencies=[Depends(require_same_origin)])
-def import_menu(request: Request, body: MenuImportIn, rid: str = Depends(require_owner)):
-    result = menu_service.import_items(request.app.state.db, _owner_restaurant(request, rid), body.items)
-    if result["errors"]:
-        shown = "; ".join(f"item {e['row']}{' (' + e['name'] + ')' if e['name'] else ''}: {e['error']}" for e in result["errors"][:5])
-        more = len(result["errors"]) - 5
-        raise HTTPException(422, "Nothing was imported. Fix these and try again: " + shown + (f"; and {more} more" if more > 0 else ""))
-    return result
 
 
 @router.put("/menu/items/{item_id}", dependencies=[Depends(require_same_origin)])

@@ -1,6 +1,6 @@
 """Validated input shapes. Everything from the browser or the model is parsed through these."""
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -29,6 +29,11 @@ class MenuItemIn(BaseModel):
         if any(len(o) > 40 for o in cleaned):
             raise ValueError("each option must be 40 characters or fewer")
         return cleaned
+
+
+class MenuImportIn(BaseModel):
+    """Bulk menu import. Each item is validated one by one in the service so errors can name the row."""
+    items: list[Any] = Field(min_length=1, max_length=200)
 
 
 class AvailabilityIn(BaseModel):

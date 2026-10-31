@@ -86,3 +86,9 @@ and the OpenAI usage dashboard shows backend tokens. Not added: telephony, payme
 * Owner login is one password per restaurant (scrypt-hashed). Order status after `confirmed` (preparing, delivered…) has no staff UI yet.
 * Urdu is requested in the prompts; quality depends on the model and is untested here. Delivery fee is the only fee; no tax or payments.
 * Not deployed, no git operations performed.
+
+## Add many dishes from JSON
+On `/menu`: sign in as owner, click **Import JSON**, then **Load sample (20 dishes)** (or paste / choose your own file) and **Import dishes**.
+From a terminal: `python -m app.import_menu` (bundled sample) or `python -m app.import_menu my_menu.json`.
+Format: `{"items": [{"name": "Chicken Karahi", "category": "Mains", "price": 1299, "description": "", "available": true, "options": ["extra spicy"]}]}` (price in rupees).
+Dishes already on the menu (same name and category) are skipped; if any row is invalid, nothing is imported and the bad rows are listed.

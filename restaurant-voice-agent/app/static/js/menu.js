@@ -7,7 +7,7 @@
   if (!root) return;
   const $ = (id) => document.getElementById(id);
   const rid = root.dataset.restaurantId;
-  let currency = 'PKR', items = [], owner = false, busy = false, pending = null, loginOpen = false;
+  let currency = 'PKR', items = [], owner = false, busy = false, pending = null, loginOpen = false, query = '', activeCat = '';
 
   async function api(path, opts = {}) {
     const res = await fetch(path, { credentials: 'same-origin', ...opts,
@@ -24,31 +24,74 @@
   const notice = (msg) => { $('menu-status').textContent = msg; };
 
   /* ---------- rendering ---------- */
+  // No photos: each dish and category gets a soft emoji tile chosen from its name (safe, widely supported emoji only).
+  const GLYPHS = [
+    [/pizza/, '\u{1F355}'], [/fries|chips/, '\u{1F35F}'], [/sandwich|club|wrap|sub\b/, '\u{1F96A}'],
+    [/burger|zinger|fast ?food/, '\u{1F354}'], [/biryani|pulao|pilau|rice|zeera|chawal/, '\u{1F35A}'],
+    [/naan|roti|paratha|bread|kulcha|chapati/, '\u{1F959}'], [/pakora|fritter/, '\u{1F9C6}'],
+    [/samosa|spring roll|starter|appetizer|snack/, '\u{1F95F}'], [/soup|shorba/, '\u{1F963}'],
+    [/chicken tikka|fried chicken|broast|chargha|wings/, '\u{1F357}'], [/tikka|kabab|kebab|bbq|boti|grill|tandoor|seekh|steak/, '\u{1F356}'],
+    [/karahi|handi|curry|korma|qorma|nihari|haleem|mains?|daal|dal\b|lentil|masala|gravy|sabzi/, '\u{1F35B}'],
+    [/lassi|juice|drink|soda|shake|chai|tea\b|coffee|water|cola|mojito|lime|beverage/, '\u{1F964}'],
+    [/kheer|gulab|jamun|dessert|sweet|ice ?cream|cake|halwa|kulfi|falooda|pudding/, '\u{1F36E}'],
+    [/salad/, '\u{1F957}'], [/fish|prawn|shrimp|sea ?food/, '\u{1F990}'], [/pasta|noodle|spaghetti|chow ?mein/, '\u{1F35D}'],
+  ];
+  const glyphOf = (text) => { const t = String(text || '').toLowerCase(); const m = GLYPHS.find(([re]) => re.test(t)); return m ? m[1] : null; };
+  const dishGlyph = (i) => glyphOf(i.name) || glyphOf(i.category) || '\u{1F37D}\uFE0F';
+  const catGlyph = (c) => glyphOf(c) || dishGlyph(items.find((i) => i.category === c) || { name: '', category: '' });
+
+  function renderChips(cats) {
+    const box = $('cat-chips'); box.replaceChildren();
+    box.hidden = cats.length < 2;                                   // a single category needs no filter
+    const make = (value, glyph, label) => {
+      const b = el('button', 'cat'); b.type = 'button'; b.setAttribute('aria-pressed', String(activeCat === value));
+      b.append(el('span', 'disc', glyph), el('span', '', label));
+      b.onclick = () => { activeCat = value; render(); }; return b;
+    };
+    box.appendChild(make('', '\u{1F37D}\uFE0F', 'All'));
+    cats.forEach((c) => box.appendChild(make(c, catGlyph(c), c)));
+  }
+
   function render() {
     const list = $('menu-list'); list.replaceChildren();
     const cats = [...new Set(items.map((i) => i.category))];
+    if (activeCat && !cats.includes(activeCat)) activeCat = '';
     $('cat-list').replaceChildren(...cats.map((c) => { const o = document.createElement('option'); o.value = c; return o; }));
+    renderChips(cats);
     if (!items.length) { notice('The menu is empty. Click "+ Add new item" to add your first dish.'); return; }
-    notice(items.length + (items.length === 1 ? ' dish' : ' dishes') + ' in ' + cats.length + (cats.length === 1 ? ' category' : ' categories') + '.');
-    cats.forEach((cat) => {
+    const q = query.trim().toLowerCase();
+    const shown = items.filter((i) => (!activeCat || i.category === activeCat) &&
+      (!q || (i.name + ' ' + i.description + ' ' + i.category).toLowerCase().includes(q)));
+    if (!shown.length) {
+      const box = el('div', 'empty', q ? 'No dishes match "' + query.trim() + '".' : 'No dishes in this category.');
+      const clear = button('Show all dishes', 'btn small', () => { query = ''; activeCat = ''; $('menu-search').value = ''; render(); });
+      box.append(document.createElement('br'), clear); list.appendChild(box);
+      notice('0 of ' + items.length + ' dishes shown.'); return;
+    }
+    const filtered = shown.length !== items.length;
+    notice(filtered ? shown.length + ' of ' + items.length + ' dishes shown.'
+      : items.length + (items.length === 1 ? ' dish' : ' dishes') + ' in ' + cats.length + (cats.length === 1 ? ' category' : ' categories') + '.');
+    cats.forEach((cat, ci) => {
+      const inCat = shown.filter((i) => i.category === cat); if (!inCat.length) return;
       list.appendChild(el('h2', '', cat));
-      items.filter((i) => i.category === cat).forEach((i) => {
+      const grid = el('div', 'grid');
+      inCat.forEach((i) => {
         const card = el('article', 'card' + (i.available ? '' : ' off'));
-        const left = el('div', 'card-main');
-        left.appendChild(el('h3', '', i.name));
-        if (i.description) left.appendChild(el('p', 'muted', i.description));
-        if (i.options.length) left.appendChild(el('p', 'muted', 'Options: ' + i.options.join(', ')));
-        left.appendChild(el('span', 'badge' + (i.available ? '' : ' off'), i.available ? 'Available' : 'Unavailable'));
-        const right = el('div', 'card-side');
-        right.appendChild(el('div', 'price', i.price));
+        card.appendChild(el('div', 'tile t' + (ci % 5), dishGlyph(i)));
+        const main = el('div', 'card-main');
+        const top = el('div', 'name-row'); top.append(el('h3', '', i.name), el('div', 'price', i.price)); main.appendChild(top);
+        if (i.description) main.appendChild(el('p', 'desc', i.description));
+        if (i.options.length) main.appendChild(el('p', 'opts', 'Options: ' + i.options.join(', ')));
+        if (!i.available) main.appendChild(el('span', 'badge off', 'Unavailable'));
+        card.appendChild(main);
         const actions = el('div', 'actions');
         actions.append(
           button('Edit', 'btn small', () => asOwner(() => openForm(i))),
           button(i.available ? 'Mark unavailable' : 'Mark available', 'btn small', () => asOwner(() => toggle(i))),
           button('Delete', 'btn small danger', () => asOwner(() => remove(i))));
-        right.appendChild(actions);
-        card.append(left, right); list.appendChild(card);
+        card.appendChild(actions); grid.appendChild(card);
       });
+      list.appendChild(grid);
     });
   }
 
@@ -115,6 +158,7 @@
   }
 
   /* ---------- events ---------- */
+  $('menu-search').addEventListener('input', (ev) => { query = ev.target.value; render(); });
   $('btn-add').addEventListener('click', () => asOwner(() => openForm(null)));
   $('btn-signin').addEventListener('click', () => { pending = null; showLogin(); });
   $('login-cancel').addEventListener('click', () => { pending = null; loginOpen = false; syncOwnerUi(); });

@@ -9,6 +9,7 @@
     </div>
     <div class="toolbar" aria-label="Menu actions">
       <button id="btn-add" class="btn primary" type="button">+ Add new item</button>
+      <button id="btn-import" class="btn" type="button">Import JSON</button>
       <button id="btn-signin" class="btn" type="button">Owner login</button>
       <button id="logout" class="btn" type="button" hidden>Sign out</button>
     </div>
@@ -42,6 +43,22 @@
           <button class="btn" type="button" id="f-reset">Cancel</button>
         </div>
         <p id="item-error" class="alert" role="alert" hidden></p>
+      </form>
+      <form id="import-form" class="stack panel" hidden>
+        <h3>Import menu from JSON</h3>
+        <p class="muted">Paste JSON or choose a .json file. Prices are in <span class="cur"></span> (for example 450 or 450.50).
+          Dishes already on the menu (same name and category) are skipped, so importing twice is safe.</p>
+        <div class="row">
+          <button class="btn" type="button" id="import-sample">Load sample (20 dishes)</button>
+          <label>Or choose a file <input id="import-file" type="file" accept=".json,application/json"></label>
+        </div>
+        <textarea id="import-text" class="code" rows="10" spellcheck="false" aria-label="Menu JSON"
+          placeholder='{"items": [{"name": "Chicken Karahi", "category": "Mains", "price": 1299, "options": ["extra spicy"]}]}'></textarea>
+        <div class="row">
+          <button class="btn primary" type="submit">Import dishes</button>
+          <button class="btn" type="button" id="import-cancel">Cancel</button>
+        </div>
+        <p id="import-error" class="alert" role="alert" hidden></p>
       </form>
     </div>
   </section>

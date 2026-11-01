@@ -29,6 +29,9 @@
   const configured = () => typeof cfg.restaurantId === 'string' && cfg.restaurantId.trim() !== '';
   const LABELS = { idle: 'Idle', connecting: 'Connecting', connected: 'Connected', ending: 'Ending', error: 'Error' };
   const CONNECT_TIMEOUT_MS = 20000, END_TIMEOUT_MS = 15000, ICE_TIMEOUT_MS = 10000, POLL_MS = 2000;
+  // After the server confirms an order, give the assistant time to say the reference, then end the call normally
+  // (the same path as the End button), which opens the confirmation page.
+  const AFTER_CONFIRM_MS = 7500;
 
   let state = 'idle';
   let gen = 0;
@@ -220,7 +223,10 @@
         const s = await api('/api/call/status?client_call_id=' + encodeURIComponent(c.id), { secret: c.secret });
         if (stale(c)) return;
         c.pollErrors = 0;
-        if (s.order && !c.orderUrl) showOrder(c, s.order);
+        if (s.order && !c.orderUrl) {
+          showOrder(c, s.order);
+          later(c, () => { if (!stale(c) && state === 'connected') endCall(); }, AFTER_CONFIRM_MS);
+        }
         if (s.state === 'failed' || s.state === 'cancelled') return fail(c, 'The ordering system disconnected. If you did not see an order confirmation, your order was not placed.');
         if (s.state === 'ended') return finishEnd(c);
       } catch (err) {

@@ -20,6 +20,7 @@
       </a>
       <nav class="top" aria-label="Main">
         <a href="/menu" {% if page == 'menu' %}aria-current="page"{% endif %}>Menu</a>
+        <a href="/chat" {% if page == 'chat' %}aria-current="page"{% endif %}>Chat</a>
         <a href="/call" {% if page == 'call' %}aria-current="page"{% endif %}>Order by voice</a>
       </nav>
     </div>
@@ -29,7 +30,7 @@
      <div class="hero">
       <div class="hero-copy">
       <h1>Restaurant not configured</h1>
-      <p class="lede">No restaurant has been set up for this page yet, so {% if page == 'call' %}voice ordering{% else %}the menu{% endif %} is not available. Nothing can be ordered until the restaurant owner or site administrator finishes setup.</p>
+      <p class="lede">No restaurant has been set up for this page yet, so {% if page == 'call' %}voice ordering{% elif page == 'chat' %}chat ordering{% else %}the menu{% endif %} is not available. Nothing can be ordered until the restaurant owner or site administrator finishes setup.</p>
       <p class="alert" role="alert">This restaurant is not configured. Please check back later.</p>
       {% if page == 'call' %}
       <div class="controls">

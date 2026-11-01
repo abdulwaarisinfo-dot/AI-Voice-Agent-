@@ -175,6 +175,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0
 /* ---------- Order confirmation ---------- */
 .confirm{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:28px 22px;max-width:720px;margin:0 auto}
 .confirm h1{font-size:clamp(1.8rem,6vw,2.5rem);font-weight:800;letter-spacing:-.035em;margin-bottom:10px}
+.confirm .tick{width:56px;height:56px;border-radius:50%;background:var(--ok-tint);color:var(--ok);display:grid;place-items:center;margin:0 0 14px}
+.confirm .tick svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .confirm .ref{display:inline-block;background:var(--brand-tint);color:var(--brand-deep);padding:8px 16px;border-radius:999px;font-weight:600;margin-bottom:20px}
 .meta{display:grid;grid-template-columns:max-content 1fr;gap:8px 20px;margin:0 0 24px}
 .meta dt{font-weight:700;color:var(--muted);font-size:.88rem}.meta dd{margin:0}

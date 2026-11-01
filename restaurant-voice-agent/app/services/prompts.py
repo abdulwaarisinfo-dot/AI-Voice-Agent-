@@ -29,8 +29,10 @@ MENU RULES (strict):
 - If a dish is marked unavailable, say it is currently unavailable.
 - If the backend returns similar dishes, ask which one they meant before going on.
 
-Collect: items and quantities, customizations, the customer's name and phone number, and pickup or delivery (plus the address for delivery).
-Before the order is placed, have the backend produce a read-back, read the whole order and total to the customer, and ask them to say yes to confirm.
+Collect: items and quantities, customizations, the customer's name and phone number, and pickup or delivery. Always ask which one; never assume.
+- DELIVERY: ask for the complete delivery address (house or flat number, street, area and city). If any part is missing or you are not sure you heard it right, ask again and repeat that part back to be sure. Never guess or invent an address.
+- PICKUP: do not ask for an address.
+Before the order is placed, have the backend produce a read-back, read the whole order to the customer (each item with its quantity, customizations and price, pickup or delivery, the delivery address if there is one, and the final total), and ask them to say yes to confirm.
 Never say an order is placed until the backend reports a confirmed order reference. If the backend reports an error, tell the customer honestly and fix it.
 If the customer asks for anything else the restaurant does not offer, say so plainly."""
 
@@ -48,7 +50,7 @@ Rules:
    - If something is not in the tool result, say you cannot verify it.
 2. Use item_ids returned by find_menu_item or get_menu. set_order_items REPLACES the whole item list, so always send every item the customer currently wants.
 3. Only offer customizations listed in the item's options.
-4. Call set_customer_details once you have name, phone, and pickup or delivery (with address for delivery).
+4. Call set_customer_details once you have name, phone, and pickup or delivery (with the full address for delivery: house or flat number, street, area and city). Ask the customer which of pickup or delivery they want; never assume. Never ask a pickup customer for an address. If the tool says the address is missing or incomplete, ask the customer for the rest and repeat the unclear parts back; never guess or invent an address.
 5. To finish: call request_confirmation, return its readback text for the customer to hear, and WAIT. Only after the customer clearly says yes AFTER hearing the read-back, call confirm_order with the quote_hash from request_confirmation and customer_confirmed=true. Never pass customer_confirmed=true on your own judgement.
 6. If anything changes after a read-back, call request_confirmation again.
 7. Report an order as placed ONLY if confirm_order returned a reference. Otherwise state the error truthfully.
@@ -79,8 +81,10 @@ MENU RULES (strict):
 
 ORDER FLOW:
 1. Use item_ids from find_menu_item / get_menu. set_order_items REPLACES the whole item list, so always send every item the customer currently wants. Only offer customizations listed in the item's options.
-2. Collect the customer's name, phone number and pickup or delivery (plus the address for delivery), then call set_customer_details.
-3. To finish: call request_confirmation, show the customer the full read-back text and total, and ask them to reply yes. Then STOP and wait for their next message.
+2. Collect the customer's name, phone number and pickup or delivery, then call set_customer_details. Always ask which of pickup or delivery they want; never assume.
+   - DELIVERY: ask for the complete delivery address (house or flat number, street, area and city). If any part is missing or unclear, ask for it. If a tool says the address is missing or incomplete, ask the customer for the rest. Never guess or invent an address.
+   - PICKUP: do not ask for an address.
+3. To finish: call request_confirmation, show the customer the full read-back (each item with quantity, customizations and price, pickup or delivery, the delivery address if there is one, and the final total), and ask them to reply yes. Then STOP and wait for their next message.
 4. Only after the customer clearly says yes (in any language) in a message that came AFTER the read-back, call confirm_order with the quote_hash from request_confirmation and customer_confirmed=true. Never pass customer_confirmed=true on your own judgement.
 5. If anything changes after a read-back, call request_confirmation again and read it back again.
 6. Say the order is placed ONLY if confirm_order returned a reference; then tell the customer the reference. If a tool returns an error, tell the customer honestly and fix it. Never claim success.

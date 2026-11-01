@@ -12,8 +12,9 @@ from .config import Settings, get_settings
 from .bootstrap import sync_default_restaurant
 from .database import connect, init_indexes
 from .money import format_money
-from .routers import menu, orders, pages, restaurants, voice
+from .routers import chat, menu, orders, pages, restaurants, voice
 from .security import RateLimiter
+from .services.chat_service import ChatService
 from .services.live_session import LiveService
 
 BASE = Path(__file__).parent
@@ -41,6 +42,9 @@ def create_app(settings: Settings | None = None, db=None, live_client=None, side
     client = live_client or AsyncOpenAI(api_key=settings.openai_api_key or "not-configured", max_retries=0, timeout=30)
     kwargs = {"connect": sideband_connect} if sideband_connect else {}
     app.state.live = LiveService(db, settings, client, **kwargs)
+    app.state.chat = ChatService(db, settings, client)  # text chat: no GPT-Live, same tools as voice
+    app.state.chat_session_limiter = RateLimiter(10, 600)   # new chats per IP per 10 min
+    app.state.chat_message_limiter = RateLimiter(30, 60)    # messages per IP per minute
     app.state.call_limiter = RateLimiter(5, 600)       # new calls per IP per 10 min
     app.state.login_limiter = RateLimiter(10, 300)
     app.state.status_limiter = RateLimiter(240, 60)    # heartbeat polling every 2s = 30/min
@@ -63,7 +67,7 @@ def create_app(settings: Settings | None = None, db=None, live_client=None, side
         return response
 
     app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
-    for r in (pages.router, menu.router, restaurants.router, voice.router, orders.router):
+    for r in (pages.router, menu.router, restaurants.router, voice.router, chat.router, orders.router):
         app.include_router(r)
     return app
 

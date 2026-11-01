@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ..services import order_service
+from ..services.chat_service import greeting_for
 from .deps import resolve_restaurant
 
 router = APIRouter()
@@ -41,7 +42,15 @@ def _render(request: Request, name: str, status: int = 200, **ctx):
 
 @router.get("/", include_in_schema=False)
 def home():
-    return RedirectResponse("/call")
+    return RedirectResponse("/chat")  # the site opens on text chat; voice stays at /call
+
+
+@router.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request, restaurant_id: str | None = Query(None, max_length=64)):
+    restaurant = _page_restaurant(request, restaurant_id)
+    if restaurant is None:
+        return _setup_page(request, "chat")
+    return _render(request, "chat.html", restaurant=restaurant, page="chat", greeting=greeting_for(restaurant["name"]))
 
 
 @router.get("/call", response_class=HTMLResponse)

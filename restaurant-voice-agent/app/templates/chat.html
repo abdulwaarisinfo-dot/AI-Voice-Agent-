@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Order by chat - {{ restaurant.name }}{% endblock %}
+{% block content %}
+<section id="chat-root" class="call chat"
+         data-restaurant-id="{{ restaurant._id }}"
+         data-menu-url="/menu?restaurant_id={{ restaurant._id|urlencode }}">
+  <h1>Order by chat</h1>
+  <p class="lede muted">Type to {{ restaurant.name }}'s ordering assistant in your own language: English, Urdu or any other. It answers in the language you write. Nothing is ordered until you clearly confirm the read-back.</p>
+
+  <div id="chat-log" class="transcript chat-log" role="log" aria-live="polite" aria-label="Chat conversation">
+    <p class="line assistant"><span class="who">Assistant:</span><span class="msg" dir="auto">{{ greeting }}</span></p>
+  </div>
+  <p id="chat-typing" class="muted typing" hidden>The assistant is typing...</p>
+
+  <div id="chat-error" class="alert" role="alert" hidden></div>
+
+  <div id="order-banner" class="banner" hidden>
+    <p id="order-text"></p>
+    <a id="order-link" class="btn primary" href="#">View order confirmation</a>
+  </div>
+
+  <form id="chat-form" class="chat-form" autocomplete="off">
+    <label class="skip-label" for="chat-input">Your message</label>
+    <input id="chat-input" type="text" maxlength="1000" dir="auto" placeholder="Type your message..." enterkeyhint="send">
+    <button id="chat-send" type="submit" class="btn primary">Send</button>
+  </form>
+
+  <p class="muted"><a href="/menu?restaurant_id={{ restaurant._id|urlencode }}">View the menu</a>
+    &middot; <a href="/call?restaurant_id={{ restaurant._id|urlencode }}">Prefer to talk? Order by voice</a>
+    &middot; <button id="chat-new" type="button" class="linklike">Start a new chat</button></p>
+</section>
+<script src="/static/js/chat.js"></script>
+{% endblock %}

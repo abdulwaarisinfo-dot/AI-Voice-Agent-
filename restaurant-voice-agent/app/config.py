@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_live_model: str = "gpt-live-1"
     openai_delegation_model: str = "gpt-6-luna"
+    openai_chat_model: str = ""  # text chat model; empty = reuse OPENAI_DELEGATION_MODEL (GPT-Live is NOT used for chat)
     mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_database: str = "restaurant_voice"
     default_restaurant_id: str = "demo-restaurant"
@@ -24,6 +25,13 @@ class Settings(BaseSettings):
     max_call_seconds: int = 600
     max_concurrent_calls: int = 5
     idle_timeout_seconds: int = 30  # no heartbeat from the browser -> server closes the call
+    max_chat_sessions: int = 50           # simultaneous text chats kept in memory
+    chat_idle_seconds: int = 1800         # a chat with no message for this long is dropped
+    chat_max_messages: int = 60           # customer messages per chat (cost guard)
+
+    @property
+    def chat_model(self) -> str:
+        return self.openai_chat_model.strip() or self.openai_delegation_model
 
     @property
     def is_production(self) -> bool:

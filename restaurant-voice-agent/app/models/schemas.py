@@ -142,3 +142,25 @@ class CallSessionIn(BaseModel):
 
 class CallRefIn(BaseModel):
     client_call_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+
+
+class ChatSessionIn(BaseModel):
+    client_chat_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    restaurant_id: str | None = Field(default=None, max_length=64)
+
+
+class ChatRefIn(BaseModel):
+    client_chat_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+
+
+class ChatMessageIn(BaseModel):
+    client_chat_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    message: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("message")
+    @classmethod
+    def _msg(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("message must not be blank")
+        return v

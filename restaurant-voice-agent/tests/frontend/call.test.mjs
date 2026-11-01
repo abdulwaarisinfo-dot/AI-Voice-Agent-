@@ -12,7 +12,7 @@ const deferred = () => { let resolve, reject; const promise = new Promise((a, b)
 const ok = (body) => ({ ok: true, status: 200, json: async () => body });
 const bad = (status, body = {}) => ({ ok: false, status, json: async () => body });
 
-function harness({ supported = true, gum, route, restaurantId = 'resto-a' } = {}) {
+function harness({ supported = true, gum, route, restaurantId = 'resto-a', delayMap = {} } = {}) {
   const ids = ['btn-call', 'btn-end', 'btn-cancel', 'status', 'status-detail', 'error', 'transcript', 'transcript-empty', 'remote-audio',
     'order-banner', 'order-text', 'order-link', 'support-warning', 'call-root'];
   const els = {};
@@ -42,7 +42,7 @@ function harness({ supported = true, gum, route, restaurantId = 'resto-a' } = {}
   };
   const sandbox = {
     console, URL, JSON, Uint8Array, Array, Error, Promise, encodeURIComponent,
-    setTimeout: (f, ms) => { const t = setTimeout(f, ms); t.unref?.(); return t; }, clearTimeout,
+    setTimeout: (f, ms) => { const t = setTimeout(f, delayMap[ms] ?? ms); t.unref?.(); return t; }, clearTimeout,   // delayMap: optional {realMs: testMs}
     AbortController, MediaStream: class { constructor(t) { this.t = t; } },
     crypto: { getRandomValues: (b) => { for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256); return b; } },
     document: { referrer: '', getElementById: (id) => els[id] || null,
@@ -259,6 +259,47 @@ test('a confirmed order seen while ending sends the customer to the confirmation
   h.pc().dc.onmessage({ data: JSON.stringify({ type: 'session.closed' }) }); await flush();
   assert.deepEqual(h.log.locations, [order.url]);
   assert.ok(h.paths().every((p) => p.startsWith('/api/call/')), 'browser must not call any order-mutating endpoint: ' + h.paths());
+});
+
+// ---------- automatic navigation once the server has confirmed the order ----------
+const AFTER_CONFIRM_MS = 7500;   // must match AFTER_CONFIRM_MS in call.js (mapped to a short delay in these tests)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const confirmedRoute = (order) => (e) => (e.path.startsWith('/api/call/status') ? ok({ state: 'active', order }) : undefined);
+const endsSent = (h) => h.log.fetch.filter((f) => f.path === '/api/call/end').length;
+
+test('after the server confirms an order the call ends normally and the customer lands on the confirmation page', async () => {
+  const order = { reference: 'ORD-ABCDEFGH', url: '/confirmation/ORD-ABCDEFGH?t=tok' };
+  const h = harness({ route: confirmedRoute(order), delayMap: { [AFTER_CONFIRM_MS]: 300 } });
+  h.els['btn-call'].click(); await flush(); h.started(h.pc()); await flush();
+  await sleep(700); await flush();                                   // first poll sees the confirmed order
+  assert.equal(h.els['order-banner'].hidden, false);
+  assert.equal(h.state(), 'connected');                              // grace period: the assistant may still be speaking
+  assert.equal(endsSent(h), 0); assert.deepEqual(h.log.locations, []);
+  await sleep(450); await flush();                                   // grace period over: same path as the End button
+  assert.equal(h.state(), 'ending'); assert.equal(endsSent(h), 1);
+  assert.deepEqual(h.pc().dc.sent, [{ type: 'session.close' }]);
+  h.pc().dc.onmessage({ data: JSON.stringify({ type: 'session.closed' }) }); await flush();
+  assert.deepEqual(h.log.locations, [order.url]);                    // exactly once, to the server-provided url
+  assert.ok(h.paths().every((p) => p.startsWith('/api/call/')), 'browser must not call any order endpoint: ' + h.paths());
+});
+
+test('a customer who ends the call themselves right after confirmation is not ended twice or redirected twice', async () => {
+  const order = { reference: 'ORD-ABCDEFGH', url: '/confirmation/ORD-ABCDEFGH?t=tok' };
+  const h = harness({ route: confirmedRoute(order), delayMap: { [AFTER_CONFIRM_MS]: 150 } });
+  h.els['btn-call'].click(); await flush(); h.started(h.pc()); await flush();
+  await sleep(700); await flush();
+  h.els['btn-end'].click(); await flush();
+  h.pc().dc.onmessage({ data: JSON.stringify({ type: 'session.closed' }) }); await flush();
+  await sleep(350); await flush();                                   // the auto-end timer would have fired by now
+  assert.equal(endsSent(h), 1); assert.deepEqual(h.log.locations, [order.url]);
+});
+
+test('without a confirmed order the call is never ended or redirected automatically', async () => {
+  const h = harness({ delayMap: { [AFTER_CONFIRM_MS]: 100 } });
+  h.els['btn-call'].click(); await flush(); h.started(h.pc()); await flush();
+  await sleep(900); await flush();
+  assert.equal(h.state(), 'connected'); assert.equal(endsSent(h), 0); assert.deepEqual(h.log.locations, []);
+  assert.equal(h.els['order-text'].textContent, '');                 // no order banner text was ever set
 });
 
 test('ending a call with no confirmed order does not navigate and submits nothing', async () => {

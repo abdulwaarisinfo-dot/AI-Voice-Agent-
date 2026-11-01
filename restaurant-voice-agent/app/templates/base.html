@@ -20,6 +20,7 @@
       </a>
       <nav class="top" aria-label="Main">
         <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'menu' %}aria-current="page"{% endif %}>Menu</a>
+        <a href="/chat?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'chat' %}aria-current="page"{% endif %}>Chat</a>
         <a href="/call?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'call' %}aria-current="page"{% endif %}>Order by voice</a>
       </nav>
     </div>
@@ -29,6 +30,10 @@
     <a href="/menu?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'menu' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
       <span>Menu</span>
+    </a>
+    <a href="/chat?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'chat' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+      <span>Chat</span>
     </a>
     <a href="/call?restaurant_id={{ restaurant._id|urlencode }}" {% if page == 'call' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>

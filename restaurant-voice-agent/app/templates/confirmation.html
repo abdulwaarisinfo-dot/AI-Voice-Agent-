@@ -3,13 +3,19 @@
 {% block content %}
 {% if order %}
 <section class="confirm">
+  <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <h1>Order confirmed</h1>
   <p class="ref">Reference <strong>{{ order.reference }}</strong></p>
   <dl class="meta">
     <dt>Restaurant</dt><dd>{{ order.restaurant_name }}</dd>
     <dt>Status</dt><dd>{{ order.status|replace('_', ' ')|capitalize }}</dd>
-    <dt>{{ 'Delivery' if order.fulfillment == 'delivery' else 'Pickup' }}</dt>
-    <dd>{% if order.fulfillment == 'delivery' %}{{ order.delivery_address }}{% else %}Collect from the restaurant{% endif %}</dd>
+    <dt>Order type</dt><dd>{{ 'Delivery' if order.fulfillment == 'delivery' else 'Pickup' }}</dd>
+    {% if order.fulfillment == 'delivery' %}
+    <dt>Delivery address</dt><dd>{{ order.delivery_address }}</dd>
+    {% else %}
+    <dt>Pickup</dt><dd>Collect from {{ order.restaurant_name }}</dd>
+    {% endif %}
+    {% if order.confirmed_at %}<dt>Placed</dt><dd>{{ order.confirmed_at.strftime('%d %b %Y, %H:%M') }} UTC</dd>{% endif %}
     {% if order.customer_name %}<dt>Name</dt><dd>{{ order.customer_name }}</dd>{% endif %}
   </dl>
   <div class="table-wrap">

@@ -1,4 +1,4 @@
-# Restaurant Voice Agent (FastAPI + MongoDB + GPT-Live)
+# Restaurant Voice Agent (FastAPI + MongoDB + GPT-Live voice + text chat)
 
 A customer opens `/call`, talks to an AI order-taker in the browser (WebRTC), hears it answer, and ends up on a
 confirmation page for an order that the **server** priced, validated and saved.
@@ -34,6 +34,24 @@ Order lifecycle: `pending → awaiting_confirmation → confirmed`
   call (unique index) = idempotent, no duplicates.
 * Ending/cancelling a call never confirms or discards an order. Unconfirmed orders are purged by a 24h MongoDB TTL.
 
+## Text chat (`/chat`, the home page)
+The site now opens on a **text chat**. Customers type, the assistant answers in the same language, and orders go through the
+exact same tools and rules as voice (`get_menu`, `find_menu_item`, `set_order_items`, ... `confirm_order`), run by the same
+`CallController`. **GPT-Live is not used for chat** (no audio, no per-minute voice billing): one Responses model
+(`OPENAI_CHAT_MODEL`, empty = `OPENAI_DELEGATION_MODEL`) talks to the customer and calls the tools. Voice at `/call` is unchanged.
+
+```
+chat.js --POST /api/chat/session--> server (no OpenAI call yet; returns chat_secret)
+chat.js --POST /api/chat/message (X-Chat-Secret)--> server --Responses API + tools--> OpenAI
+                                                 <-- {reply, order|null}
+```
+* Same safety as voice: no HTTP endpoint creates/edits/confirms an order; the server prices everything; `confirm_order` needs the
+  read-back `quote_hash` **and** a customer message that arrived after the read-back; one order per chat; a confirmed chat is finished.
+* Memory: OpenAI keeps the conversation via `previous_response_id` (responses are stored by OpenAI under its default retention);
+  the server keeps only the last response id plus the tool state, in memory (per process, like the call limiter).
+* Guards: 10 new chats / IP / 10 min, 30 messages / IP / min, 1000 chars / message, `MAX_CHAT_SESSIONS`, `CHAT_MAX_MESSAGES`,
+  idle chats dropped after `CHAT_IDLE_SECONDS`, tool loop capped at 8 rounds. Mongo `chat_sessions` holds metadata only (24h TTL).
+
 ## Setup
 
 ```bash
@@ -45,7 +63,7 @@ python -m app.set_owner_password --sample   # menu says "Invalid restaurant or p
 uvicorn app.main:app_factory --factory --reload
 ```
 In development (`APP_ENV=development`) the server applies `OWNER_PASSWORD` at startup: it creates the restaurant if missing and makes that password the `/menu` owner login (restart after changing it). Start the server from the `restaurant-voice-agent` folder so `.env` is found. Production never does this automatically.
-Open http://localhost:8000/call (microphone needs HTTPS or localhost). MongoDB must be running at `MONGODB_URI`.
+Open http://localhost:8000/ (text chat) or http://localhost:8000/call (voice; microphone needs HTTPS or localhost). MongoDB must be running at `MONGODB_URI`.
 
 | Variable | Purpose |
 |---|---|

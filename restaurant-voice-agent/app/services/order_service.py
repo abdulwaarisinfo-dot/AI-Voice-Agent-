@@ -38,6 +38,16 @@ def new_reference() -> str:
     return "ORD-" + "".join(secrets.choice(REF_ALPHABET) for _ in range(8))
 
 
+MIN_ADDRESS_CHARS = 8
+
+
+def address_looks_complete(address: str | None) -> bool:
+    """Cheap guard so "home" or "x" cannot be accepted as a delivery address. Deliberately lenient: it only
+    needs some letters and at least two words (any script), so real addresses in Urdu or English both pass."""
+    a = (address or "").strip()
+    return len(a) >= MIN_ADDRESS_CHARS and any(ch.isalpha() for ch in a) and len(a.split()) >= 2
+
+
 def validation_message(exc: ValidationError) -> str:
     return "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors()[:4])
 
@@ -109,10 +119,11 @@ def readback_text(order: dict) -> str:
     parts = []
     for l in order["lines"]:
         extra = f" ({', '.join(l['customizations'])})" if l["customizations"] else ""
-        parts.append(f"{l['quantity']} x {l['name']}{extra}")
+        parts.append(f"{l['quantity']} x {l['name']}{extra} at {format_money(l['unit_price_minor'], cur)} each = {format_money(l['line_total_minor'], cur)}")
     where = "delivery to " + order["delivery_address"] if order["fulfillment"] == "delivery" else "pickup"
     fee = f", delivery fee {format_money(order['delivery_fee_minor'], cur)}" if order["delivery_fee_minor"] else ""
-    return (f"{'; '.join(parts)}. {where.capitalize()}{fee}. Total {format_money(order['total_minor'], cur)}. "
+    where = where[0].upper() + where[1:]  # not str.capitalize(): that would lowercase the customer's address
+    return (f"{'; '.join(parts)}. {where}{fee}. Total {format_money(order['total_minor'], cur)}. "
             f"Name {order['customer']['name']}, phone {order['customer']['phone']}.")
 
 
@@ -171,6 +182,9 @@ def set_customer(db, restaurant_id: str, call_id: str, data: CustomerIn) -> dict
         raise OrderError("pickup_unavailable", "This restaurant does not offer pickup.")
     if data.fulfillment == "delivery" and not data.delivery_address:
         raise OrderError("address_required", "A delivery address is required for delivery.")
+    if data.fulfillment == "delivery" and not address_looks_complete(data.delivery_address):
+        raise OrderError("address_incomplete", "That delivery address looks incomplete. Ask the customer for the full address "
+                         "(house or flat number, street, area and city), repeat it back to confirm, and never guess or invent any part of it.")
     totals = compute_totals(restaurant, order["lines"], data.fulfillment)
     return _save(db, order, {
         "customer": {"name": data.customer_name, "phone": data.phone}, "fulfillment": data.fulfillment,

@@ -9,6 +9,8 @@ orders        {_id, reference, restaurant_id, voice_session_id, status, lines[],
                delivery_address, quote_hash, expires_at, confirmed_at, created_at, updated_at}
 voice_sessions{_id(client_call_id), restaurant_id, openai_session_id, call_secret_hash, status,
                created_at, ended_at, end_reason, usage}   # metadata only: no audio, no transcripts
+chat_sessions {_id(client_chat_id), restaurant_id, created_at, last_message_at, message_count, expires_at}
+               # text chat metadata only: no message text is stored here; _id doubles as orders.voice_session_id
 """
 from pymongo import ASCENDING, MongoClient
 from pymongo.database import Database
@@ -30,3 +32,4 @@ def init_indexes(db: Database) -> None:
     # Unconfirmed orders carry expires_at and are purged by MongoDB; confirming removes the field.
     db.orders.create_index("expires_at", expireAfterSeconds=0)
     db.voice_sessions.create_index("openai_session_id")
+    db.chat_sessions.create_index("expires_at", expireAfterSeconds=0)

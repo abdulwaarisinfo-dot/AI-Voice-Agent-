@@ -52,6 +52,11 @@ chat.js --POST /api/chat/message (X-Chat-Secret)--> server --Responses API + too
 * Guards: 10 new chats / IP / 10 min, 30 messages / IP / min, 1000 chars / message, `MAX_CHAT_SESSIONS`, `CHAT_MAX_MESSAGES`,
   idle chats dropped after `CHAT_IDLE_SECONDS`, tool loop capped at 8 rounds. Mongo `chat_sessions` holds metadata only (24h TTL).
 
+**Delivery vs pickup (voice and chat, same rules):** the assistant always asks which one. Delivery needs a complete address (house or flat number, street,
+area, city): the server rejects a missing or obviously incomplete one (`address_required` / `address_incomplete`), so the assistant has to ask again. Pickup never asks for an address.
+The read-back lists every item with quantity, customizations and price, pickup or delivery, the address, and the total. After the customer says yes and the server confirms,
+chat shows the final reply and opens `/confirmation/…` after ~2.5 s; voice does the same after ~7.5 s (time for the assistant to say the reference).
+
 ## Setup
 
 ```bash
@@ -78,14 +83,14 @@ Open http://localhost:8000/ (text chat) or http://localhost:8000/call (voice; mi
 | `MAX_CALL_SECONDS`, `MAX_CONCURRENT_CALLS` | Cost guards (defaults 600 / 5) |
 
 ## Try it
-* Voice: open `/call`, press **Call restaurant**, allow the mic, wait for **Connected**, order something, say yes to the read-back; you land on `/confirmation/ORD-…?t=…` when you end the call (or use the banner link).
+* Voice: open `/call`, press **Call restaurant**, allow the mic, wait for **Connected**, order something, say yes to the read-back; once the server has saved the confirmed order the assistant says the reference, the call ends by itself a few seconds later and you land on `/confirmation/ORD-…?t=…` (you can also end the call yourself, or use the banner link).
 * Menu: `/menu` → sign in with the owner password → add/edit/mark unavailable. The agent reads the DB each time.
 * Cancel: while "Connecting", **Cancel** aborts the request, closes the peer connection, releases the mic, asks the server to close any session already created, and goes back.
 
 ## Tests (no OpenAI spend, no real MongoDB)
 ```bash
 python -m pytest -q                      # services, tools, API, lifecycle, local real-WebSocket sideband test
-node --test tests/frontend/call.test.mjs # runs the real call.js against fake DOM/WebRTC/fetch
+node --test tests/frontend/call.test.mjs tests/frontend/chat.test.mjs # run the real call.js / chat.js against fake DOM/WebRTC/fetch
 ```
 
 ## Costs

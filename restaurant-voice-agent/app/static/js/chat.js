@@ -3,7 +3,8 @@
  *   1. The greeting is rendered by the server. No session exists until the first message is sent.
  *   2. First send:  POST /api/chat/session  -> chat_secret   (the browser makes up a 32-hex chat id)
  *   3. Every send:  POST /api/chat/message  (X-Chat-Secret)  -> { reply, order }
- *   4. When `order` comes back the order is confirmed by the SERVER; we only show its link.
+ *   4. When `order` comes back the order is confirmed by the SERVER; we show its link and, after a short pause so
+ *      the customer can read the assistant's last message, open the confirmation page.
  * All text is inserted with textContent (never innerHTML).
  */
 (() => {
@@ -17,6 +18,7 @@
   };
   const cfg = { restaurantId: root.dataset.restaurantId };
   const configured = () => typeof cfg.restaurantId === 'string' && cfg.restaurantId.trim() !== '';
+  const REDIRECT_DELAY_MS = 2500;
 
   let chatId = null, secret = null, busy = false, finished = false;
 
@@ -78,6 +80,7 @@
     el.bannerText.textContent = 'Your order is confirmed. Reference: ' + order.reference;
     el.link.href = order.url;
     el.banner.hidden = false;
+    setTimeout(() => location.assign(order.url), REDIRECT_DELAY_MS);   // the banner link stays as the fallback
   }
 
   async function submit(ev) {

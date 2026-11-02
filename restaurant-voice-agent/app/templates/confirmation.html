@@ -17,6 +17,7 @@
     {% endif %}
     {% if order.confirmed_at %}<dt>Placed</dt><dd>{{ order.confirmed_at.strftime('%d %b %Y, %H:%M') }} UTC</dd>{% endif %}
     {% if order.customer_name %}<dt>Name</dt><dd>{{ order.customer_name }}</dd>{% endif %}
+    {% if order.customer_phone %}<dt>Phone</dt><dd>{{ order.customer_phone }}</dd>{% endif %}
   </dl>
   <div class="table-wrap">
     <table>

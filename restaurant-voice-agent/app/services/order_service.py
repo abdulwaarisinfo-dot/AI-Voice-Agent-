@@ -290,6 +290,7 @@ def get_confirmed_order(db, secret: str, reference: str, token: str | None) -> d
         return None
     restaurant = get_restaurant(db, order["restaurant_id"], include_archived=True)  # history stays readable
     view = order_view(order)
+    view["customer_phone"] = (order.get("customer") or {}).get("phone")  # token-protected page only; not in order_view
     view["restaurant_name"] = restaurant["name"] if restaurant else "Restaurant"
     view["restaurant_id"] = order["restaurant_id"]
     return view

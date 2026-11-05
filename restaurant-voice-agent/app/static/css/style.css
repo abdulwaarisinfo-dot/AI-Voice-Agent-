@@ -39,7 +39,7 @@ nav.top{display:none;gap:4px}
 nav.top a{min-height:40px;padding:0 16px;display:inline-flex;align-items:center;border-radius:999px;color:var(--muted);font-weight:650;font-size:.95rem;text-decoration:none}
 nav.top a:hover{color:var(--ink);background:#EDE9E4}
 nav.top a[aria-current=page]{background:var(--ink);color:#fff}
-nav.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+nav.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
 nav.tabbar a{display:grid;justify-items:center;gap:3px;padding:8px 4px;border-radius:var(--r-sm);color:var(--muted);font-size:.74rem;font-weight:650;text-decoration:none}
 nav.tabbar svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 nav.tabbar a[aria-current=page]{color:var(--brand-deep)}
@@ -209,3 +209,6 @@ tr.grand th,tr.grand td{font-size:1.15rem;font-weight:800;border-bottom:0;paddin
 .skip-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .linklike{font:inherit;background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer}
 @media (max-width:520px){.chat-form .btn{padding:0 18px}.chat-log{max-height:52vh}}
+
+/* Keep focused fields and scrolled-to elements clear of the fixed bottom tab bar on phones. */
+@media (max-width:759px){html{scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))}}
